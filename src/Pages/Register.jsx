@@ -8,6 +8,8 @@ import Button from '../Component/Button';
 import Logo from '../svg/Logo';
 import { FcGoogle } from 'react-icons/fc';
 import { AiFillApple } from 'react-icons/ai';
+import { signup } from '../Api/api';
+import { useNavigate } from 'react-router-dom';
 
 const validationSchema = Yup.object({
     name: Yup.string().required("Name is required"),
@@ -16,6 +18,33 @@ const validationSchema = Yup.object({
 })
 
 const Register = () => {
+
+    const navigate = useNavigate();
+    const initialValues = { name: "", email: "", password: ""};
+
+    const handleSubmit = async(values, {resetForm}) => {
+        try{
+            console.log("Sending signup data:", values);
+            const res = await signup(values);
+            toast.success("Register Successfully!");
+            console.log(res.data);
+            resetForm();
+            navigate('/signin');
+            
+        }catch(err){
+            const errorMsg = err?.response?.data?.message;
+
+            if(errorMsg && errorMsg.toLowerCase().includes("already exists")){
+                toast.info("You're already registered. Please go to the login page.");
+                setTimeout(() => navigate("/signin"), 2000);
+            } else{
+                toast.error("Registration failed. Please try again.");
+
+            }
+            console.error("Signup error:", errorMsg);
+        }
+    };
+    
   return (
     <div className='w-full h-screen flex overflow-hidden justify-between items-center'>
         <div className='w-auto h-auto fixed top-[10px] left-[10px]'>
@@ -25,14 +54,10 @@ const Register = () => {
             <div className='w-full max-w-[350px] h-auto flex flex-col gap-[35px]'>
             <span className='text-big'>Get Started Now</span>
             <Formik
-                initialValues={{ name: "", email: "", password: ""}}
+                initialValues={initialValues}
                 validationSchema={validationSchema}
-                onSubmit={(values, {resetForm}) => {
-                    console.log('Form Data:', values);
-                    toast.success("Register Successfully!");
-                    <ToastContainer/>
-                    resetForm();
-                }}>
+                onSubmit={handleSubmit}
+                >
                 <Form className='w-full h-auto flex flex-col gap-[10px]'>
                     <div className='w-full'>
                         <label htmlFor="name" className='text-base-md'>Name</label><br />
@@ -53,7 +78,7 @@ const Register = () => {
                     </div>
 
                     <div className='w-full max-w-[350px] flex items-center justify-center mt-[30px]'>
-                        <Button text="Signup" className='w-auto bg-[#3A5B22] items-center justify-center'/>
+                        <Button text="Signup" type="submit" className='w-auto bg-[#3A5B22] text-[#ffffff] items-center justify-center'/>
                     </div>
                 </Form>
             </Formik>
@@ -65,14 +90,15 @@ const Register = () => {
             </div>
 
             <div className='w-full max-w-[350px] justify-between gap-[10px] flex'>
-                <Button icon={FcGoogle} text="Google" className='bg-transparent text-black border border-black flex items-center justify-center'/>
-                <Button icon={AiFillApple} text="Apple" className='bg-transparent text-black border border-black flex items-center justify-center'/>
+                <Button icon={FcGoogle} text="Google" type='submit' className='bg-transparent border border-black flex items-center justify-center'/>
+                <Button icon={AiFillApple} text="Apple" type='submit' className='bg-transparent border border-black flex items-center justify-center'/>
             </div>
 
             <div className=''>
-                <span className=''>Have an account? <span className='text-blue-600 cursor-pointer'>Sign in</span></span>
+                <span className=''>Have an account? <span className='text-blue-600 cursor-pointer' onClick={()=> navigate('/signin')}>Sign in</span></span>
             </div>
         </div>
+        <ToastContainer position="bottom-left"/>
         <div className='w-auto h-auto'>
             <LoginBanner/>
         </div>
